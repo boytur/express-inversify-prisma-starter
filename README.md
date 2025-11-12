@@ -117,6 +117,24 @@ compose.yaml             # Local Postgres container
 Dockerfile               # Multi-stage production image
 ```
 
+## Architecture Overview
+
+- Express is bootstrapped through `InversifyExpressServer`, allowing controllers to declare dependencies via decorators.
+- Services and repositories are composed through the DI container defined in `src/inversify.config.ts`.
+- Prisma acts as the data access layer, exposed through `PrismaService` so the raw client stays isolated from feature modules.
+- Zod schemas enforce request payload contracts before they reach business logic, keeping controllers thin.
+- Cross-cutting concerns (logging, auth, error handling) live in `src/middleware` and are registered centrally.
+
+### Request Lifecycle
+
+1. Incoming HTTP request hits Express.
+2. Global middlewares apply (JSON parsing, `requestLogger`, CORS, static assets).
+3. Inversify routes the request to the controller matching the path.
+4. Validation middleware (`validate`) checks DTOs; failures short-circuit with `400` responses.
+5. Controller resolves the required service from the container and invokes domain logic.
+6. Service interacts with repositories which call Prisma.
+7. Responses propagate back through the middleware stack; errors flow to `errorMiddleware`.
+
 ## Container Image
 
 Build the production image locally:
@@ -127,9 +145,30 @@ npm run docker:build
 
 The `Dockerfile` uses Node 18 Alpine images and copies only the compiled `dist/` bundle plus production dependencies.
 
+## Extending the Template
+
+- **Add a module**: create a folder in `src/modules/<feature>` containing controller, DTO/schema, service, repository. Register bindings in `src/inversify.config.ts` and export `@controller`-decorated classes.
+- **Add middleware**: drop a new file under `src/middleware` and register it in `server.ts` before controllers are mounted.
+- **Add database tables**: update `prisma/schema.prisma`, run `npx prisma migrate dev`, and expose the model through repositories.
+- **Document a route**: add OpenAPI annotations (JSDoc style) on controller methods so `swagger-jsdoc` picks them up automatically.
+
 ## CI/CD
 
 A ready-to-use GitHub Actions workflow (`.github/workflows/ci.yml`) runs linting, build, and tests. Extend it with deploy steps as needed.
+
+## Troubleshooting
+
+- **Prisma cannot reach the database**: confirm `DATABASE_URL` points to an accessible Postgres instance and that migrations ran successfully.
+- **`Cannot find module '@/...'`**: ensure `npm run build` executed after adding new aliased paths and that Jest uses `ts-jest` with the configured mapper.
+- **Swagger missing in production**: by design, Swagger mounts only when `NODE_ENV !== 'production'`. Override the condition in `server.ts` if you need docs in production.
+- **Log forwarding failures**: check network access to `LOG_ENDPOINT` and inspect application logs for warn/error entries from `logger`.
+
+## FAQ
+
+- **Why both `app.ts` and `server.ts`?** `app.ts` demonstrates a plain Express setup, while `server.ts` is the DI-enabled entry point used in production builds.
+- **Can I swap Postgres for another database?** Prisma supports multiple providers. Update `prisma/schema.prisma`, adjust `DATABASE_URL`, and regenerate the client.
+- **How do I seed data?** Create `prisma/seed.ts` and configure `package.json` scripts (`prisma db seed`) following Prisma docs.
+- **Where do auth guards go?** Implement middleware (e.g., `AuthMiddleware`) and apply it via `@httpGet` decorator options or globally in `server.ts`.
 
 ## Next Steps
 
