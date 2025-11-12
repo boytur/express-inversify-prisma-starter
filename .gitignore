@@ -1,0 +1,58 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Optional npm cache directory
+.npm/
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# dotenv environment variables file
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Runtime data
+pids
+*.pid
+*.sock
+*.lock
+
+# Directory for compiled output
+dist/
+build/
+out/
+.next/ # Next.js build output
+.nuxt/ # Nuxt.js build / generate output
+
+# Coverage directory
+coverage/
+
+# Testing
+*.tap
+/test/__snapshots__/
+
+# Editor directories and files
+.vscode/ # VS Code specific files
+.idea/ # IntelliJ IDEA specific files
+.DS_Store # macOS specific files
+Thumbs.db # Windows specific files
+
+# Other
+*.tgz
+.yarn-integrity
+.cache/
