@@ -15,11 +15,11 @@ container.bind<PrismaService>(TYPES.PrismaService).to(PrismaService).inSingleton
 
 // User
 container.bind<UserService>(TYPES.UserService).to(UserService).inRequestScope();
-container.bind<UserRepository>(TYPES.UserRepository).to(UserRepository).inRequestScope();
+container.bind<UserRepository>(TYPES.UserRepository).to(UserRepository).inSingletonScope();
 
 // Auth
 container.bind<AuthMiddleware>(TYPES.AuthMiddleware).to(AuthMiddleware).inRequestScope();
 // Crypto
-container.bind<ICryptoService>(TYPES.CryptoService).to(CryptoService).inSingletonScope();
+container.bind<ICryptoService>(TYPES.CryptoService).to(CryptoService).inTransientScope();
 
 export default container;
